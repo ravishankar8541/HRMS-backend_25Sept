@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            margin: 10mm 15mm;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px; /* Increased from 12px */
+            line-height: 1.4;
+            color: #111;
+            margin: 0;
+            padding: 0;
+        }
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #f27022;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .logo {
+            width: 130px;
+            height: auto;
+        }
+        .ref-info {
+            text-align: right;
+            font-size: 12px; /* Increased from 10px */
+            line-height: 1.4;
+        }
+        .title {
+            text-align: center;
+            font-size: 18px; /* Increased from 16px */
+            font-weight: bold;
+            margin: 12px 0;
+            text-transform: uppercase;
+        }
+        .address-block {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .content {
+            text-align: justify;
+        }
+        .terms-list {
+            padding-left: 15px;
+            margin: 5px 0;
+            list-style: none;
+        }
+        .terms-list li {
+            margin-bottom: 4px;
+        }
+        .standards-box {
+            background: #fafafa;
+            border: 1px solid #eee;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 13px; /* Increased from 11px */
+            border-left: 4px solid #f27022;
+        }
+        .signature-table {
+            width: 100%;
+            margin-top: 100px; /* Reduced gap slightly to fit enlarged text */
+        }
+        .footer-container {
+            margin-top: 120px;
+            font-size: 11px; /* Increased from 9.5px */
+            color: #333;
+        }
+        .footer-divider {
+            border-top: 2px solid #f27022;
+            margin-bottom: 4px;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+
+    <table class="header-table">
+        <tr>
+            <td style="width: 55%;">
+                <% if (locals.logo) { %>
+                    <img src="<%= logo %>" class="logo">
+                <% } else { %>
+                    <div style="font-size: 22px; font-weight: bold;">Viral Ads Media</div> <!-- Increased from 20px -->
+                    <div style="font-size: 12px; text-transform: uppercase; color: #555;">Digital Creative Agency</div> <!-- Increased from 10px -->
+                <% } %>
+            </td>
+            <td class="ref-info">
+                <strong>Ref No:</strong> <%= offerId %><br>
+                <strong>Date:</strong> <%= locals.currentDate %>
+            </td>
+        </tr>
+    </table>
+
+    <div class="address-block">
+        To,<br>
+        <span class="highlight"><%= employeeName %></span><br>
+        <% if (locals.fathersName) { %> S/O: <%= fathersName %><br> <% } %>
+        <%= address %><br>
+        <%= phoneNumber %><br>
+        <%= emailId %>
+    </div>
+
+    <div class="title">Letter of Employment Offer</div>
+
+    <div class="content">
+        <p>Dear <span class="highlight"><%= employeeName %></span>,</p>
+
+        <p>We are pleased to formally offer you the position of <span class="highlight"><%= position %></span> at <span class="highlight">Viral Ads Media</span>.</p>
+
+        <p style="font-weight: bold; font-style: italic; margin: 8px 0;">Subject: Appointment for the position of <%= position %>.</p>
+
+        <p>Your employment will be governed by the following key terms and conditions:</p>
+
+        <ul class="terms-list">
+            <li><strong>Commencement:</strong> <%= formattedJoiningDate %></li>
+            <li><strong>Remuneration:</strong> <span class="highlight">₹<%= formattedSalary %>/-</span> (Inclusive of all statutory allowances)</li>
+            <li><strong>Probation:</strong> Three (3) Months</li>
+            <li><strong>Location:</strong> Delhi</li>
+        </ul>
+
+        <div class="standards-box">
+            <strong>Professional Standards:</strong> You are expected to maintain high levels of confidentiality and integrity. All intellectual property created during your tenure remains the property of the agency.
+        </div>
+    </div>
+
+    <table class="signature-table">
+        <tr>
+            <td style="width: 50%;">
+                <p style="margin-bottom: 5px; font-weight: bold;">Best Regards,</p>
+                <p style="margin: 0;"><strong>Viral Ads Media</strong></p>
+                <p style="margin-top: 0;">HR Department</p>
+                <div style="height: 30px;"></div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer-container">
+        <div class="footer-divider"></div>
+        <div style="text-align: center; line-height: 1.4;">
+            <strong>Viral Ads Media | Digital Creative Agency</strong><br>
+            B-27, Budh Vihar Phase 1, New Delhi - 110086 | +91 93544 91934
+        </div>
+    </div>
+</body>
+</html>
