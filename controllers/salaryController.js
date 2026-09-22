@@ -39,13 +39,16 @@ const createSalarySlip = async (req, res) => {
 
     const workingDays = Number(nod) > 0 ? Number(nod) : 30;
     const lopDays = Number(totalLeaveDays || 0);
-    const lopDeduction = (grossEarnings / workingDays) * lopDays;
 
-    const pfDeduction = Number(pf || 0);
-    const otherDeductionAmount = Number(otherDeduction || 0);
+    // Exact financial rounding to 2 decimal places to prevent float bugs like 13333.333
+    const rawLop = (grossEarnings / workingDays) * lopDays;
+    const lopDeduction = Math.round(rawLop * 100) / 100;
 
-    const totalDeductions = lopDeduction + pfDeduction + otherDeductionAmount;
-    const netPayable = grossEarnings - totalDeductions;
+    const pfDeduction = Math.round(Number(pf || 0) * 100) / 100;
+    const otherDeductionAmount = Math.round(Number(otherDeduction || 0) * 100) / 100;
+
+    const totalDeductions = Math.round((lopDeduction + pfDeduction + otherDeductionAmount) * 100) / 100;
+    const netPayable = Math.round((grossEarnings - totalDeductions) * 100) / 100;
 
     const salaryRecord = await Salary.create({
       employeeName: employeeName.trim(),
@@ -70,20 +73,20 @@ const createSalarySlip = async (req, res) => {
       grossEarnings,
       totalDeductions,
       netPayable,
-      emailStatus: 'Pending'
+      emailStatus: 'Pending',
     });
 
     return res.status(201).json({
       success: true,
       message: 'Salary slip generated and saved successfully',
-      data: salaryRecord
+      data: salaryRecord,
     });
   } catch (err) {
-    console.error('DATABASE SAVE ERROR:', err.errors || err);
+    console.error('DATABASE SAVE ERROR:', err);
     return res.status(500).json({
       success: false,
       message: 'Failed to generate salary slip record',
-      error: err.message
+      error: err.message,
     });
   }
 };
@@ -97,11 +100,15 @@ const sendSalaryEmail = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Record not found' });
     }
 
-    // Safely round netPayable before converting to words to prevent decimal float crashes
     const roundedNetPay = Math.round(Number(salaryRecord.netPayable) || 0);
     let netPayWords = "";
     try {
       netPayWords = toWords(roundedNetPay);
+      // Capitalize first letter of every word
+      netPayWords = netPayWords
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
     } catch (e) {
       netPayWords = String(roundedNetPay);
     }
@@ -128,7 +135,7 @@ const sendSalaryEmail = async (req, res) => {
       grossEarnings: salaryRecord.grossEarnings,
       totalDeductions: salaryRecord.totalDeductions,
       netPayable: salaryRecord.netPayable,
-      netPayWords: netPayWords
+      netPayWords: netPayWords,
     };
 
     await sendSalarySlipEmail(salaryRecord.employeeEmail, emailData);

@@ -3,42 +3,56 @@ const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');
 
-/**
- * Generates PDF buffer for Termination Letter using html-pdf
- * @param {Object} data 
- * @returns {Promise<Buffer>} PDF buffer
- */
+// Helper to find and read images as Base64
+const getAssetBase64 = (filename) => {
+  const searchPaths = [
+    path.join(__dirname, '../assets', filename),
+    path.join(__dirname, '../public', filename),
+    path.join(process.cwd(), 'assets', filename),
+    path.join(process.cwd(), 'public', filename),
+    path.join(__dirname, '../../frontend/public', filename),
+    path.join(__dirname, '../../HRMS-frontend-21Sept/public', filename),
+    path.join(process.cwd(), '../public', filename),
+  ];
+
+  for (const filePath of searchPaths) {
+    if (fs.existsSync(filePath)) {
+      try {
+        const bitmap = fs.readFileSync(filePath);
+        return `data:image/png;base64,${bitmap.toString('base64')}`;
+      } catch (err) {
+        console.error(`Error reading ${filePath}:`, err);
+      }
+    }
+  }
+  return "";
+};
+
 const generateTerminationPDF = async (data) => {
   const templatePath = path.join(__dirname, '../templates/terminationLetter.ejs');
   
-  // 1. Load Logo and convert to Base64 (Ensures visibility in PDF) 
-  let logoBase64 = "";
-  try {
-    const logoPath = path.join(__dirname, '../assets/blackLogo.png');
-    const bitmap = fs.readFileSync(logoPath);
-    logoBase64 = `data:image/png;base64,${bitmap.toString('base64')}`;
-  } catch (err) {
-    console.error("LOGO ERROR: Ensure logo is at backend/assets/blackLogo.png");
-  }
+  // 1. Load Logo and HR Signature
+  const logoBase64 = getAssetBase64('blackLogo.png');
+  const hrSignatureBase64 = getAssetBase64('hrSignature.png');
 
-  // 2. Render HTML with specific Termination Letter fields [cite: 15-28]
+  // 2. Render HTML with EJS
   const html = await ejs.renderFile(templatePath, {
     logo: logoBase64,
-    noticeDate: formatDate(data.noticeDate || new Date()), // Matches "28 February 2026" style [cite: 15]
-    name: data.name || data.employeeName, // [cite: 17]
-    email: data.email || 'N/A', // [cite: 18]
-    contact: data.phoneNumber || 'N/A', // [cite: 19]
+    hrSignature: hrSignatureBase64,
+    noticeDate: formatDate(data.noticeDate || new Date()),
+    name: data.name || data.employeeName,
+    email: data.email || 'N/A',
+    contact: data.phoneNumber || 'N/A',
     designation: data.designation,
-    lastWorkingDate: formatDate(data.lastWorkingDate), // [cite: 22]
-    reason: data.reason || 'Not work Proper in the Office', // [cite: 23]
-    hrName: data.hrName || 'HR Manager', // [cite: 26]
-    companyAddress: 'B-27, Budh Vihar Phase 1, Delhi-110086' // [cite: 28]
+    lastWorkingDate: formatDate(data.lastWorkingDate),
+    reason: data.reason || 'review of organizational requirements',
+    hrName: data.hrName || 'HR Manager',
+    companyAddress: 'B-27, Budh Vihar Phase 1, Delhi-110086'
   });
 
-  // 3. PDF Options matching your previous design
   const options = { 
     format: 'A4', 
-    border: { top: '10mm', right: '20mm', bottom: '20mm', left: '20mm' },
+    border: { top: '10mm', right: '15mm', bottom: '15mm', left: '15mm' },
     type: "pdf",
     quality: "100"
   };
@@ -51,9 +65,6 @@ const generateTerminationPDF = async (data) => {
   });
 };
 
-/**
- * Helper to format dates exactly like the source PDF: "28 February 2026" [cite: 15]
- */
 function formatDate(date) {
   if (!date) return 'N/A';
   const d = new Date(date);

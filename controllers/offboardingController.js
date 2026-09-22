@@ -1,9 +1,24 @@
-import React from 'react'
+const Offboarding = require('../models/Offboarding');
+const Employee = require('../models/Employee');
 
-const offboardingController = () => {
-  return (
-    <div>offboardingController</div>
-  )
-}
+exports.createOffboarding = async (req, res) => {
+  try {
+    const offboarding = await Offboarding.create(req.body);
+    return res.status(201).json({
+      success: true,
+      message: 'Offboarding record created',
+      data: offboarding
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
 
-export default offboardingController
+exports.getAllOffboarding = async (req, res) => {
+  try {
+    const records = await Offboarding.find().populate('employee');
+    return res.status(200).json({ success: true, count: records.length, data: records });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};

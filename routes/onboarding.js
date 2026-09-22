@@ -154,6 +154,10 @@ router.post('/submit/:id', uploadMiddleware, async (req, res) => {
     // Status tracking
     updateData.onboardingStatus = 'Completed';
 
+    if (!employee.empId) {
+      updateData.empId = `VAM-${employeeId.slice(-4).toUpperCase()}`;
+    }
+
     // Update Employee document
     const updatedEmployee = await Employee.findByIdAndUpdate(
       employeeId,

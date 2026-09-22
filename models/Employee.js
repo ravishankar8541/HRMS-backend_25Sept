@@ -16,6 +16,19 @@ const employeeSchema = new mongoose.Schema(
       lowercase: true,
     },
 
+    empId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      uppercase: true,
+    },
+
+    department: {
+      type: String,
+      trim: true,
+    },
+
     designation: {
       type: String,
       required: [true, "Designation is required"],

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Increment Letter</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm 18mm;
+    }
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: #1a1a1a;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      box-sizing: border-box;
+      min-height: 10.2in;
+    }
+    .header-table {
+      width: 100%;
+      border-bottom: 2.5px solid #f27022;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+    .logo {
+      width: 160px;
+      height: auto;
+    }
+    .ref-info {
+      text-align: right;
+      font-size: 11.5px;
+      color: #333;
+      line-height: 1.4;
+    }
+    .title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 16px 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .salary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 12.5px;
+    }
+    .salary-table td {
+      padding: 7px 12px;
+      border: 1px solid #cbd5e1;
+    }
+    .salary-table td.label-col {
+      width: 35%;
+      font-weight: bold;
+      background-color: #f8fafc;
+    }
+    .accent-val {
+      color: #f27022;
+      font-weight: bold;
+    }
+    .content-body {
+      text-align: justify;
+    }
+    .signatory-box {
+      margin-top: 35px;
+    }
+    .footer {
+      position: absolute;
+      bottom: 8mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 11px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 8px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <table class="header-table">
+    <tr>
+      <td style="width: 60%;">
+        <% if (logo) { %>
+          <img src="<%= logo %>" class="logo" alt="Viral Ads Media">
+        <% } else { %>
+          <h2 style="margin: 0; color: #f27022;">VIRAL ADS MEDIA</h2>
+        <% } %>
+      </td>
+      <td class="ref-info">
+        <strong>Ref No:</strong> <%= incrementId %><br>
+        <strong>Date:</strong> <%= currentDate %>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Recipient Address -->
+  <div style="margin-bottom: 14px;">
+    To,<br>
+    <strong><%= employeeName %></strong><br>
+    <% if (fathersName && fathersName !== 'N/A') { %>S/O <%= fathersName %><br><% } %>
+    <%= address %><br>
+    <%= phoneNumber %><br>
+    <%= emailId %>
+  </div>
+
+  <div class="title">Letter of Salary Increment</div>
+
+  <div class="content-body">
+    <p>Dear <strong><%= employeeName %></strong>,</p>
+    <p>We are pleased to inform you that based on your performance and contribution to <strong>Viral Ads Media</strong>, your compensation has been revised with effect from <strong><%= formattedEffectiveDate %></strong>.</p>
+
+    <p><strong>Subject: Salary Increment for the position of <%= position %></strong></p>
+
+    <table class="salary-table">
+      <tr>
+        <td class="label-col">Employee ID</td>
+        <td><%= employeeId || 'N/A' %></td>
+      </tr>
+      <tr>
+        <td class="label-col">Designation</td>
+        <td><%= position %></td>
+      </tr>
+      <tr>
+        <td class="label-col">Department</td>
+        <td><%= department || 'Sales' %></td>
+      </tr>
+      <tr>
+        <td class="label-col">Previous Salary</td>
+        <td>Rs. <%= formattedCurrentSalary %>/- per month</td>
+      </tr>
+      <tr>
+        <td class="label-col">Revised Salary</td>
+        <td class="accent-val">Rs. <%= formattedNewSalary %>/- per month</td>
+      </tr>
+      <tr>
+        <td class="label-col">Increment Percentage</td>
+        <td><strong><%= incrementPercentage %>%</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Effective Date</td>
+        <td><%= formattedEffectiveDate %></td>
+      </tr>
+    </table>
+
+    <% if (performanceRemarks) { %>
+      <p><strong>Performance Remarks:</strong> <em>"<%= performanceRemarks %>"</em></p>
+    <% } %>
+
+    <p>All other terms and conditions of your employment contract remain unchanged. We appreciate your dedication and look forward to your continued contribution to the growth of Viral Ads Media.</p>
+  </div>
+
+  <!-- Only Yours Sincerely / Regards (Authority signature line & text removed) -->
+  <div class="signatory-box">
+    <p style="margin: 0 0 4px 0;">Yours Sincerely,</p>
+    <p style="margin: 0; font-weight: bold;">For Viral Ads Media</p>
+  </div>
+
+  <!-- Bottom Location Footer -->
+  <div class="footer">
+    Viral Ads Media | B-27, Budh Vihar Phase 1, New Delhi - 110086 | +91 93544 91934
+  </div>
+
+</body>
+</html>

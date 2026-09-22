@@ -1,303 +1,297 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="UTF-8">
-    <title>Salary Payslip</title>
+    <title>Salary Payslip - Viral Ads Media</title>
     <style>
-        @page {
-            margin: 10mm 12mm;
-            size: A4 portrait;
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #1e293b;
-            font-size: 11.5px;
+        @page { size: A4 portrait; margin: 8mm 14mm 8mm 14mm; }
+        html, body {
+            margin: 0; padding: 0;
+            background-color: #ffffff;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #000000;
+            font-size: 10px;
             line-height: 1.4;
-            margin: 0;
-            padding: 0;
         }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
+        .page-wrapper {
+            min-height: 1010px;
+            position: relative;
+            box-sizing: border-box;
+            padding-bottom: 35px;
         }
-
-        /* Header - Company Info */
         .header-table {
             width: 100%;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #f27022;
+            border-bottom: 2.5px solid #f27022;
             padding-bottom: 10px;
+            margin-bottom: 12px;
         }
-
         .logo {
-            height: 55px;
+            height: 85px;
             width: auto;
+            max-width: 300px;
             object-fit: contain;
         }
-
-        .company-info {
+        .header-right {
             text-align: right;
             vertical-align: middle;
+            font-size: 9.5px;
+            color: #333333;
+            line-height: 1.55;
         }
-
         .company-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: #0f172a;
+            font-size: 16px;
+            font-weight: bold;
+            color: #000000;
             letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+        .title-block { text-align: center; margin-bottom: 16px; }
+        .title-block h1 {
+            font-size: 16px;
+            font-weight: bold;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
             margin: 0;
         }
-
-        .company-address {
-            font-size: 10px;
-            color: #64748b;
+        .title-block .month-text {
+            font-size: 11.5px;
+            font-weight: bold;
+            color: #f27022;
             margin-top: 2px;
         }
-
-        /* Title */
-        .title {
-            text-align: center;
-            margin: 12px 0 16px;
-        }
-
-        .title h1 {
-            font-size: 18px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #0f172a;
-            margin: 0 0 4px 0;
-        }
-
-        .title .month {
-            font-size: 12px;
-            font-weight: 600;
-            color: #f27022;
-        }
-
-        /* Employee Table */
-        .employee-table {
+        .emp-table {
             width: 100%;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            margin-bottom: 16px;
-            background-color: #f8fafc;
+            border-collapse: collapse;
+            border: 1px solid #000000;
+            margin-bottom: 14px;
+            background-color: #ffffff;
         }
-
-        .employee-table td {
-            padding: 6px 10px;
-            border: 1px solid #e2e8f0;
+        .emp-table td {
+            padding: 5.5px 8px;
+            border: 1px solid #d1d5db;
+            font-size: 9.5px;
+            color: #000000;
             vertical-align: middle;
-            width: 33.33%;
-            font-size: 11px;
         }
-
-        .employee-table td strong {
-            color: #334155;
+        .emp-label { color: #374151; font-weight: bold; width: 18%; }
+        .emp-val { color: #000000; width: 32%; }
+        .attendance-row td {
+            background-color: #f9fafb;
+            font-weight: bold;
+            border-top: 1px solid #000000;
         }
-
-        /* Salary Table */
         .salary-table {
             width: 100%;
-            border: 1px solid #cbd5e1;
-            margin-bottom: 16px;
+            border-collapse: collapse;
+            border: 1px solid #000000;
+            margin-bottom: 14px;
+            background-color: #ffffff;
         }
-
         .salary-table th {
-            background: #0f172a;
-            color: #ffffff;
-            padding: 7px 10px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 11px;
+            background-color: #f3f4f6;
+            color: #000000;
+            padding: 6.5px 8px;
+            font-size: 9.5px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: bold;
+            border: 1px solid #000000;
         }
-
+        .salary-table th.right { text-align: right; width: 125px; }
+        .salary-table th.left { text-align: left; }
         .salary-table td {
-            padding: 7px 10px;
-            border: 1px solid #e2e8f0;
-            font-size: 11px;
+            padding: 5.5px 8px;
+            border: 1px solid #d1d5db;
+            font-size: 9.5px;
+            color: #000000;
         }
-
-        .amount-col {
+        .salary-table td.amount {
             text-align: right;
-            width: 120px;
-        }
-
-        .total-row {
-            background: #f1f5f9;
-            font-weight: 700;
-            color: #0f172a;
-        }
-
-        .total-row td {
-            border-top: 2px solid #cbd5e1;
-        }
-
-        /* Net Pay Box */
-        .net-pay-box {
-            margin-top: 16px;
-            text-align: center;
-        }
-
-        .net-inner {
-            display: block;
-            background: #0f172a;
-            color: #ffffff;
-            padding: 12px 20px;
-            border-radius: 4px;
-            border-left: 5px solid #f27022;
-            text-align: center;
-        }
-
-        .net-value {
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .net-words {
-            font-size: 11px;
-            color: #cbd5e1;
-            margin-top: 3px;
-            font-style: italic;
-        }
-
-        /* Signatures */
-        .signature-table {
-            width: 100%;
-            margin-top: 50px;
-            text-align: center;
-        }
-
-        .sig-line {
-            border-top: 1px solid #94a3b8;
-            width: 70%;
-            margin: 0 auto 8px auto;
-        }
-
-        .sig-title {
-            font-weight: 700;
-            color: #0f172a;
-            font-size: 11px;
-        }
-
-        .sig-sub {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
             font-size: 10px;
-            color: #64748b;
+        }
+        .total-row td {
+            border-top: 1.5px solid #000000;
+            border-bottom: 1.5px solid #000000;
+            background-color: #f9fafb;
+            font-weight: bold;
+            font-size: 10px;
+        }
+        .net-pay-box {
+            width: 100%;
+            border: 1.5px solid #000000;
+            border-left: 4px solid #f27022;
+            padding: 9px 12px;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+            background-color: #ffffff;
+        }
+        .net-pay-title { font-size: 10px; font-weight: bold; color: #374151; text-transform: uppercase; }
+        .net-pay-value { font-size: 15.5px; font-weight: bold; color: #000000; margin-top: 1px; }
+        .net-pay-words { font-size: 9px; color: #4b5563; font-style: italic; margin-top: 2px; }
+        .disclaimer { font-size: 8.5px; color: #6b7280; font-style: italic; margin-top: 6px; }
+        
+        .signatory-container {
+            margin-top: 35px;
+            width: 100%;
+            text-align: right;
+        }
+        .sig-box { display: inline-block; text-align: center; width: 220px; }
+        .sig-company { font-weight: bold; font-size: 10.5px; color: #000000; margin-bottom: 4px; }
+        .sig-image-wrap { height: 72px; margin: 2px auto; text-align: center; }
+        .hr-sig-img {
+            height: 70px;
+            max-width: 210px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+        .sig-line { border-top: 1.5px solid #000000; margin-top: 4px; margin-bottom: 4px; }
+        .sig-title { font-weight: bold; font-size: 10px; color: #000000; }
+        .sig-sub { font-size: 8.5px; color: #4b5563; }
+        
+        .footer {
+            position: absolute;
+            bottom: 0px; left: 0; right: 0;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 6px;
+            text-align: center;
+            font-size: 8.5px;
+            color: #475569;
+            background-color: #ffffff;
         }
     </style>
 </head>
-
 <body>
-
-    <!-- Header -->
-    <table class="header-table">
-        <tr>
-            <td style="width: 50%;">
-                <img src="<%= logo %>" alt="Viral Ads Media" class="logo">
-            </td>
-            <td class="company-info">
-                <div class="company-name">VIRAL ADS MEDIA</div>
-                <div class="company-address">
-                    B-27, Budh Vihar Phase 1, New Delhi-110086
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <!-- Title -->
-    <div class="title">
-        <h1>SALARY PAYSLIP</h1>
-        <div class="month">For the month of <%= payMonth || '—' %></div>
-    </div>
-
-    <!-- Employee Information -->
-    <table class="employee-table">
-        <tr>
-            <td><strong>Employee Name:</strong> <%= employeeName || '—' %></td>
-            <td><strong>Emp ID:</strong> <%= employeeId || '—' %></td>
-            <td><strong>Designation:</strong> <%= designation || '—' %></td>
-        </tr>
-        <tr>
-            <td><strong>DOJ:</strong> <%= joiningDate || '—' %></td>
-            <td><strong>PAN No:</strong> <%= panNumber || '—' %></td>
-            <td><strong>Aadhaar No:</strong> <%= aadharNumber || '—' %></td>
-        </tr>
-        <tr>
-            <td><strong>Bank A/c No:</strong> <%= bankAccount || '—' %></td>
-            <td><strong>IFSC Code:</strong> <%= ifsc || '—' %></td>
-            <td><strong>Phone:</strong> <%= phone || '—' %></td>
-        </tr>
-        <tr>
-            <td><strong>NOD (No. of Days):</strong> <%= workingDays || 30 %></td>
-            <td><strong>NDP (Days Present):</strong> <%= (Number(workingDays || 30) - Number(lopDays || 0)) %></td>
-            <td><strong>LOP Days:</strong> <%= lopDays || 0 %></td>
-        </tr>
-    </table>
-
-    <!-- Salary Table -->
-    <table class="salary-table">
-        <thead>
+    <div class="page-wrapper">
+        <table class="header-table">
             <tr>
-                <th>Earnings</th>
-                <th class="amount-col">Amount (₹)</th>
-                <th>Deductions</th>
-                <th class="amount-col">Amount (₹)</th>
+                <td style="width: 50%; vertical-align: middle;">
+                    <% if (logo) { %>
+                        <img src="<%= logo %>" alt="Viral Ads Media" class="logo">
+                    <% } else { %>
+                        <div class="company-name" style="color: #f27022; font-size: 24px;">VIRAL ADS MEDIA</div>
+                    <% } %>
+                </td>
+                <td class="header-right">
+                    <div class="company-name">VIRAL ADS MEDIA</div>
+                    <div><strong>Ref:</strong> VAM/PAY/<%= (employeeId || 'EMP') %>/<%= (payMonth || '').replace('/', '-') %></div>
+                    <div><strong>Issue Date:</strong> <%= new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) %></div>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Basic Salary</td>
-                <td class="amount-col"><%= basicSalary || '0' %></td>
-                <td>Loss of Pay (LOP)</td>
-                <td class="amount-col"><%= lopAmount || '0' %></td>
-            </tr>
-            <tr>
-                <td>Allowance</td>
-                <td class="amount-col"><%= allowance || '0' %></td>
-                <td>Other Deduction</td>
-                <td class="amount-col"><%= otherDeduction || '0' %></td>
-            </tr>
-            <tr>
-                <td>Bonus</td>
-                <td class="amount-col"><%= bonus || '0' %></td>
-                <td></td>
-                <td class="amount-col"></td>
-            </tr>
-            <tr class="total-row">
-                <td>Gross Earnings</td>
-                <td class="amount-col">₹<%= grossEarnings || '0' %></td>
-                <td>Total Deductions</td>
-                <td class="amount-col">₹<%= totalDeductions || '0' %></td>
-            </tr>
-        </tbody>
-    </table>
+        </table>
 
-    <!-- Net Pay Box -->
-    <div class="net-pay-box">
-        <div class="net-inner">
-            <div class="net-value">Net Pay: ₹ <%= netPayable || '0' %></div>
-            <div class="net-words">(Rupees <%= netPayWords || '0' %> Only)</div>
+        <div class="title-block">
+            <h1>SALARY PAYSLIP</h1>
+            <div class="month-text">For the month of <%= payMonth || '—' %></div>
         </div>
-    </div>
 
-    <!-- Signatures -->
-    <table class="signature-table">
-        <tr>
-           
-            <td style="width: 50%;">
+        <table class="emp-table">
+            <tr>
+                <td class="emp-label">Employee Name:</td>
+                <td class="emp-val"><strong><%= employeeName || '—' %></strong></td>
+                <td class="emp-label">Employee ID:</td>
+                <td class="emp-val"><strong><%= employeeId || '—' %></strong></td>
+            </tr>
+            <tr>
+                <td class="emp-label">Designation:</td>
+                <td class="emp-val"><%= designation || '—' %></td>
+                <td class="emp-label">Date of Joining:</td>
+                <td class="emp-val"><%= joiningDate || '—' %></td>
+            </tr>
+            <tr>
+                <td class="emp-label">PAN Number:</td>
+                <td class="emp-val" style="text-transform: uppercase;"><%= panNumber || '—' %></td>
+                <td class="emp-label">Aadhaar Number:</td>
+                <td class="emp-val"><%= aadharNumber || '—' %></td>
+            </tr>
+            <tr>
+                <td class="emp-label">Bank Account:</td>
+                <td class="emp-val"><%= bankAccount || '—' %></td>
+                <td class="emp-label">IFSC Code:</td>
+                <td class="emp-val" style="text-transform: uppercase;"><%= ifsc || '—' %></td>
+            </tr>
+            <tr class="attendance-row">
+                <td class="emp-label">Total Days (NOD):</td>
+                <td class="emp-val"><strong><%= workingDays || 30 %> Days</strong></td>
+                <td class="emp-label">Days Present (NDP):</td>
+                <td class="emp-val"><strong><%= (Number(workingDays || 30) - Number(lopDays || 0)) %> Days</strong> (LOP: <%= lopDays || 0 %> Days)</td>
+            </tr>
+        </table>
+
+        <table class="salary-table">
+            <thead>
+                <tr>
+                    <th class="left">EARNINGS</th>
+                    <th class="right">AMOUNT (₹)</th>
+                    <th class="left" style="border-left: 1px solid #000000;">DEDUCTIONS</th>
+                    <th class="right">AMOUNT (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Basic Salary</td>
+                    <td class="amount"><%= basicSalary || '0.00' %></td>
+                    <td style="border-left: 1px solid #d1d5db;">Loss of Pay (LOP)</td>
+                    <td class="amount"><%= lopAmount || '0.00' %></td>
+                </tr>
+                <tr>
+                    <td>House Rent Allowance (HRA)</td>
+                    <td class="amount"><%= allowance || '0.00' %></td>
+                    <td style="border-left: 1px solid #d1d5db;">Provident Fund (PF)</td>
+                    <td class="amount"><%= pfDeduction || '0.00' %></td>
+                </tr>
+                <tr>
+                    <td>Special Allowance & Conveyance</td>
+                    <td class="amount">0.00</td>
+                    <td style="border-left: 1px solid #d1d5db;">Tax Deducted at Source (TDS)</td>
+                    <td class="amount">0.00</td>
+                </tr>
+                <tr>
+                    <td>Performance Bonus & Incentives</td>
+                    <td class="amount"><%= bonus || '0.00' %></td>
+                    <td style="border-left: 1px solid #d1d5db;">Other Deductions</td>
+                    <td class="amount"><%= otherDeduction || '0.00' %></td>
+                </tr>
+                <tr class="total-row">
+                    <td>GROSS EARNINGS</td>
+                    <td class="amount">₹ <%= grossEarnings || '0.00' %></td>
+                    <td style="border-left: 1px solid #000000;">TOTAL DEDUCTIONS</td>
+                    <td class="amount">₹ <%= totalDeductions || '0.00' %></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="net-pay-box">
+            <div class="net-pay-title">Net Take-Home Pay</div>
+            <div class="net-pay-value">₹ <%= netPayable || '0.00' %></div>
+            <div class="net-pay-words">(Rupees <%= netPayWords || 'Zero' %> Only)</div>
+        </div>
+
+        <div class="disclaimer">
+            * This is a computer-generated salary slip and does not require a physical signature.
+        </div>
+
+        <div class="signatory-container">
+            <div class="sig-box">
+                <div class="sig-company">For Viral Ads Media</div>
+                <div class="sig-image-wrap">
+                    <% if (locals.hrSignature && hrSignature) { %>
+                        <img src="<%= hrSignature %>" alt="HR Signature" class="hr-sig-img" />
+                    <% } else { %>
+                        <span style="font-family: 'Brush Script MT', 'Segoe Script', cursive; font-size: 24px; color: #1d4ed8;">HR Signature</span>
+                    <% } %>
+                </div>
                 <div class="sig-line"></div>
                 <div class="sig-title">Authorised Signatory</div>
-                <div class="sig-sub">For Viral Ads Media</div>
-            </td>
-        </tr>
-    </table>
+                <div class="sig-sub">HR Department</div>
+            </div>
+        </div>
 
+        <div class="footer">
+            <strong>Viral Ads Media</strong> | B-27, Budh Vihar Phase 1, New Delhi - 110086 | Tel: +91 93544 91934 | hr@viraladsmedia.com
+        </div>
+    </div>
 </body>
-
 </html>

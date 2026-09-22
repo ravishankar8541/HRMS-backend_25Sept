@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 const Employee = require("../models/Employee");
 
+const buildEmpId = (objectId) =>
+  `VAM-${objectId.toString().slice(-4).toUpperCase()}`;
+
 /**
  * @desc    Get all employees
  * @route   GET /api/employees
@@ -71,7 +74,17 @@ exports.getEmployeeById = async (req, res) => {
  */
 exports.createEmployee = async (req, res) => {
   try {
-    const employee = await Employee.create(req.body);
+    const payload = { ...req.body };
+    if (payload.empId) {
+      payload.empId = String(payload.empId).trim().toUpperCase();
+    }
+
+    let employee = await Employee.create(payload);
+
+    if (!employee.empId) {
+      employee.empId = buildEmpId(employee._id);
+      employee = await employee.save();
+    }
 
     return res.status(201).json({
       success: true,

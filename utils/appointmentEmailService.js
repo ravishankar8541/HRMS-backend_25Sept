@@ -4,28 +4,25 @@ const fs = require('fs');
 const nodemailer = require('nodemailer');
 const pdf = require('html-pdf');
 
-const sendAppointmentLetter = async (email, data) => {
-    // 1. Resolve Template Path
+const generateAppointmentPDFBuffer = async (data) => {
     const templatePath = path.join(__dirname, '../templates/appointmentLetter.ejs');
 
-    // 2. Read Logo as Base64
     let logoBase64 = "";
     try {
         const logoPath = path.join(__dirname, '../assets/blackLogo.png');
         const bitmap = fs.readFileSync(logoPath);
         logoBase64 = `data:image/png;base64,${bitmap.toString('base64')}`;
-    } catch (err) { 
-        console.error("Logo missing for Appointment Letter:", err); 
+    } catch (err) {
+        console.error("Logo missing for Appointment Letter:", err);
     }
 
-    // 3. Render HTML using EJS
     const html = await ejs.renderFile(templatePath, {
         logo: logoBase64,
         offerId: data.offerId,
         employeeName: data.employeeName,
         fathersName: data.fathersName,
         address: data.address,
-        phone: data.phone,             
+        phone: data.phone,
         email: data.email,
         position: data.position,
         formattedSalary: Number(data.salary).toLocaleString('en-IN'),
@@ -34,15 +31,18 @@ const sendAppointmentLetter = async (email, data) => {
         hrName: data.hrName
     });
 
-    // 4. Generate PDF using Phantom-based html-pdf (No Puppeteer dependency)
     const options = { format: 'A4', border: '10mm' };
 
-    const pdfBuffer = await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         pdf.create(html, options).toBuffer((err, buffer) => {
             if (err) return reject(err);
             resolve(buffer);
         });
     });
+};
+
+const sendAppointmentLetter = async (email, data) => {
+    const pdfBuffer = await generateAppointmentPDFBuffer(data);
 
     // 5. Construct Email HTML
     const emailHtml = `
@@ -98,3 +98,4 @@ const sendAppointmentLetter = async (email, data) => {
 };
 
 module.exports = sendAppointmentLetter;
+module.exports.generateAppointmentPDFBuffer = generateAppointmentPDFBuffer;
