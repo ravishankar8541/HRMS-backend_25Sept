@@ -27,7 +27,7 @@ app.use(cors({
   exposedHeaders: ['X-Document-Id'],
   origin: (origin, callback) => {
     const allowed = [
-      'https://hrms.viraladsmedia.com',
+      'https://hrms-frontend-25-sept.vercel.app','https://hrms.viraladsmedia.com', 
       'http://hrms.viraladsmedia.com',
       ...(process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map(v => v.trim())
     ];
