@@ -23,19 +23,35 @@ const PORT = process.env.PORT || 5000;
 
 
 // CORS Middleware
-app.use(cors({ exposedHeaders: ['X-Document-Id'], origin: (origin, callback) => {
-  const allowed = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map(v => v.trim());
-  callback(null, !origin || allowed.includes(origin));
-} }));
+app.use(cors({
+  exposedHeaders: ['X-Document-Id'],
+  origin: (origin, callback) => {
+    const allowed = [
+      'https://hrms.viraladsmedia.com',
+      'http://hrms.viraladsmedia.com',
+      ...(process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map(v => v.trim())
+    ];
+    // Allow requests with no origin (Postman, mobile apps, etc.)
+    callback(null, !origin || allowed.includes(origin));
+  }
+}));
 
 app.use(express.json({ limit: '1mb' }));
+
 // Roll back newly uploaded assets when validation/database writes fail.
-app.use((req,res,next) => {
+app.use((req, res, next) => {
   res.once('finish', () => {
     if (res.statusCode < 400) return;
-    const {cloudinary} = require('../config/cloudinary');
-    for (const files of Object.values(req.files || {})) for (const file of files) {
-      if (file.filename) cloudinary.uploader.destroy(file.filename, {resource_type:file.resourceType || 'image',type:'authenticated'}).catch(()=>{});
+    const { cloudinary } = require('../config/cloudinary');
+    for (const files of Object.values(req.files || {})) {
+      for (const file of files) {
+        if (file.filename) {
+          cloudinary.uploader.destroy(file.filename, {
+            resource_type: file.resourceType || 'image',
+            type: 'authenticated'
+          }).catch(() => {});
+        }
+      }
     }
   });
   next();
@@ -65,10 +81,15 @@ app.get('/health', (req, res) => {
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   const status = err.status || (['ValidationError', 'CastError', 'MulterError'].includes(err.name) ? 400 : 500);
-  res.status(status).json({ success: false, message: status === 500 ? 'Server request failed' : err.message });
+  res.status(status).json({
+    success: false,
+    message: status === 500 ? 'Server request failed' : err.message
+  });
 });
+
 if (require.main === module) {
   if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is required');
   dbConnection().then(() => app.listen(PORT, () => console.log(`Server listening on ${PORT}`)));
 }
+
 module.exports = app;
