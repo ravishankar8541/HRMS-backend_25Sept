@@ -1,8 +1,8 @@
+const deliverDocument = require('./deliverDocument');
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');
-const nodemailer = require('nodemailer');
-const pdf = require('html-pdf');
+const pdf = require('./pdfEngine');
 
 const generateAppointmentPDFBuffer = async (data) => {
     const templatePath = path.join(__dirname, '../templates/appointmentLetter.ejs');
@@ -42,7 +42,8 @@ const generateAppointmentPDFBuffer = async (data) => {
 };
 
 const sendAppointmentLetter = async (email, data) => {
-    const pdfBuffer = await generateAppointmentPDFBuffer(data);
+  const transporter = { sendMail: options => deliverDocument(options, 'Appointment Letter', data.employeeName, data._snapshotId) };
+    const pdfBuffer = data._pdfBuffer || await generateAppointmentPDFBuffer(data);
 
     // 5. Construct Email HTML
     const emailHtml = `
@@ -67,15 +68,7 @@ const sendAppointmentLetter = async (email, data) => {
     `;
 
     // 6. Setup Transporter
-    const transporter = nodemailer.createTransport({
-        host: "smtp.titan.email",
-        port: 465,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        }
-    });
+
 
     // 7. Send Mail
     try {

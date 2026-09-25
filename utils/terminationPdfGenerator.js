@@ -1,4 +1,4 @@
-const pdf = require('html-pdf');
+const pdf = require('./pdfEngine');
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');

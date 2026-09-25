@@ -1,3 +1,5 @@
+const archive = require('../utils/documentArchive');
+const errorStatus = require('../utils/errorStatus');
 const OfferLetter = require('../models/OfferLetter');
 const sendOfferLetter = require('../utils/emailService');
 
@@ -37,10 +39,12 @@ const createOffer = async (req, res) => {
       hrName: hrName ? hrName.trim() : 'HR Manager',
     });
 
-    return res.status(201).json({ success: true, offerId, data: offer });
+    const snapshot = await archive.ensure('Offer Letter', offer);
+
+    return res.status(201).json({ success: true, offerId, documentId: snapshot._id, data: offer });
   } catch (err) {
     console.error("Create Offer Error:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(errorStatus(err)).json({ success: false, message: err.message });
   }
 };
 
@@ -53,12 +57,12 @@ const sendEmail = async (req, res) => {
     if (!offer) return res.status(404).json({ success: false, message: 'Offer not found' });
 
     const recipient = email ? email.trim() : offer.emailId;
-    await sendOfferLetter(recipient, offer);
+    await sendOfferLetter(recipient, await archive.emailData('Offer Letter', offer));
 
     return res.json({ success: true, message: 'Offer letter sent successfully with PDF attachment' });
   } catch (err) {
     console.error("Send Offer Email Error:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(errorStatus(err)).json({ success: false, message: err.message });
   }
 };
 

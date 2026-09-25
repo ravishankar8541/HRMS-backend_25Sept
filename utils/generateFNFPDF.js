@@ -1,4 +1,4 @@
-const pdf = require('html-pdf');
+const pdf = require('./pdfEngine');
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');
@@ -30,7 +30,8 @@ const generateFNFPDF = async (data) => {
 
   const html = await ejs.renderFile(templatePath, {
     logo: logoBase64,
-    currentDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+    hrSignature: `data:image/png;base64,${fs.readFileSync(path.join(__dirname, "../assets/hrSignature.png")).toString("base64")}`,
+    currentDate: new Date(data.updatedAt || data.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
     employeeName: data.employeeName,
     email: data.email,
     phone: data.phone || 'N/A',
@@ -40,6 +41,9 @@ const generateFNFPDF = async (data) => {
     leaveEncashment: formatCurrency(data.leaveEncashment),
     incentive: formatCurrency(data.incentive),
     deductions: formatCurrency(data.deductions),
+    gratuity: formatCurrency(data.gratuity),
+    noticeRecovery: formatCurrency(data.noticeRecovery),
+    status: data.status || "Draft",
     totalPayable: formatCurrency(data.totalPayable),
     companyAddress: 'B-27, Budh Vihar Phase 1, Delhi-110086',
     

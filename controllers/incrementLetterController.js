@@ -1,3 +1,5 @@
+const archive = require('../utils/documentArchive');
+const errorStatus = require('../utils/errorStatus');
 const IncrementLetter = require('../models/IncrementLetter');
 const sendIncrementLetter = require('../utils/incrementEmailService');
 
@@ -52,15 +54,17 @@ exports.createIncrement = async (req, res) => {
       reasonForIncrement: reasonForIncrement || 'Performance appraisal'
     });
 
+    const snapshot = await archive.ensure('Increment Letter', record);
+
     return res.status(201).json({
       success: true,
       message: 'Increment letter generated successfully',
       incrementId,
-      data: record
+      documentId: snapshot._id, data: record
     });
   } catch (error) {
     console.error('Create Increment Error:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(errorStatus(error)).json({ success: false, message: error.message });
   }
 };
 
@@ -75,7 +79,7 @@ exports.sendEmail = async (req, res) => {
     }
 
     const recipient = (email || record.emailId).trim();
-    await sendIncrementLetter(recipient, record);
+    await sendIncrementLetter(recipient, await archive.emailData('Increment Letter', record));
 
     record.emailStatus = 'Sent';
     await record.save();
@@ -86,6 +90,6 @@ exports.sendEmail = async (req, res) => {
     });
   } catch (error) {
     console.error('Send Increment Email Error:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(errorStatus(error)).json({ success: false, message: error.message });
   }
 };

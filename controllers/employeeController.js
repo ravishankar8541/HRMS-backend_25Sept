@@ -1,8 +1,10 @@
+const {serialize, metadata} = require('../utils/employeeUploads');
+const errorStatus = require('../utils/errorStatus');
 const mongoose = require("mongoose");
 const Employee = require("../models/Employee");
 
 const buildEmpId = (objectId) =>
-  `VAM-${objectId.toString().slice(-4).toUpperCase()}`;
+  `VAM-${objectId.toString().toUpperCase()}`;
 
 /**
  * @desc    Get all employees
@@ -18,10 +20,10 @@ exports.getAllEmployees = async (req, res) => {
     return res.status(200).json({
       success: true,
       count: employees.length,
-      data: employees,
+      data: employees.map(serialize),
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(errorStatus(error)).json({
       success: false,
       message: "Failed to fetch employees",
       error: error.message,
@@ -56,10 +58,10 @@ exports.getEmployeeById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: employee,
+      data: serialize(employee),
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(errorStatus(error)).json({
       success: false,
       message: "Failed to fetch employee",
       error: error.message,
@@ -74,7 +76,8 @@ exports.getEmployeeById = async (req, res) => {
  */
 exports.createEmployee = async (req, res) => {
   try {
-    const payload = { ...req.body };
+    const payload = { ...req.body, uploadAssets: metadata(req.files) };
+    for (const [key, files] of Object.entries(req.files || {})) payload[key] = files[0].path;
     if (payload.empId) {
       payload.empId = String(payload.empId).trim().toUpperCase();
     }
@@ -89,7 +92,7 @@ exports.createEmployee = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Employee created successfully",
-      data: employee,
+      data: serialize(employee),
     });
   } catch (error) {
     // Duplicate email handling
@@ -113,7 +116,7 @@ exports.createEmployee = async (req, res) => {
       });
     }
 
-    return res.status(500).json({
+    return res.status(errorStatus(error)).json({
       success: false,
       message: "Failed to create employee",
       error: error.message,
@@ -150,27 +153,31 @@ exports.updateEmployee = async (req, res) => {
     // Step 3: Handle uploaded files (Multer puts them in req.files)
     if (req.files) {
       if (req.files.photo && req.files.photo[0]) {
-        updates.photo = req.files.photo[0].filename; // or .path depending on your multer config
+        updates.photo = req.files.photo[0].path; // or .path depending on your multer config
       }
       if (req.files.adharCardDoc && req.files.adharCardDoc[0]) {
-        updates.adharCardDoc = req.files.adharCardDoc[0].filename;
+        updates.adharCardDoc = req.files.adharCardDoc[0].path;
       }
       if (req.files.panCardDoc && req.files.panCardDoc[0]) {
-        updates.panCardDoc = req.files.panCardDoc[0].filename;
+        updates.panCardDoc = req.files.panCardDoc[0].path;
       }
       if (req.files.educationProof && req.files.educationProof[0]) {
-        updates.educationProof = req.files.educationProof[0].filename;
+        updates.educationProof = req.files.educationProof[0].path;
       }
       if (req.files.experienceLetter && req.files.experienceLetter[0]) {
-        updates.experienceLetter = req.files.experienceLetter[0].filename;
+        updates.experienceLetter = req.files.experienceLetter[0].path;
       }
     }
 
     // Step 4: Perform the update
-    const employee = await Employee.findByIdAndUpdate(id, updates, {
-      new: true,
-      runValidators: true,
-    });
+    const employee = await Employee.findById(id);
+    if (employee) {
+      updates.uploadAssets = {...employee.uploadAssets,...metadata(req.files)};
+      for (const [key,value] of Object.entries(updates)) {
+        if (!['_id','__v','createdAt','updatedAt'].includes(key) && !key.startsWith(String.fromCharCode(36))) employee.set(key,value);
+      }
+      await employee.save();
+    }
 
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
@@ -179,7 +186,7 @@ exports.updateEmployee = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Employee updated successfully",
-      data: employee,
+      data: serialize(employee),
     });
   } catch (error) {
     if (error.code === 11000) {
@@ -188,7 +195,7 @@ exports.updateEmployee = async (req, res) => {
 
     console.error("Update error:", error);
 
-    return res.status(500).json({
+    return res.status(errorStatus(error)).json({
       success: false,
       message: "Failed to update employee",
       error: error.message,
@@ -225,7 +232,7 @@ exports.deleteEmployee = async (req, res) => {
       message: "Employee deleted successfully",
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(errorStatus(error)).json({
       success: false,
       message: "Failed to delete employee",
       error: error.message,

@@ -1,4 +1,4 @@
-const pdf = require('html-pdf');
+const pdf = require('./pdfEngine');
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');
@@ -18,10 +18,11 @@ const generateSalarySlipPDF = async (data) => {
 
     const html = await ejs.renderFile(templatePath, {
       logo: logoBase64,
+      hrSignature: `data:image/png;base64,${fs.readFileSync(path.join(__dirname, "../assets/hrSignature.png")).toString("base64")}`,
       companyName: 'VIRAL ADS MEDIA',
       companyAddress: 'B-27, Budh Vihar Phase 1, New Delhi-110086',
       payMonth: data.monthYear || '—',
-      netPayWords: data.netPayWords || "",
+      netPayWords: data.netPayWords || require("number-to-words").toWords(Math.round(data.netPayable || 0)), 
       employeeName: data.employeeName || '—',
       employeeId: data.employeeId || '—',
       designation: data.designation || '—',

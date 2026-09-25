@@ -1,9 +1,2 @@
-import React from 'react'
-
-const onboardingController = () => {
-  return (
-    <div>onboardingController</div>
-  )
-}
-
-export default onboardingController
+// Onboarding handlers are implemented in routes/onboarding.js.
+module.exports = {};

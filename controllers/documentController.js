@@ -1,330 +1,79 @@
-const archiver = require('archiver');
-const path = require('path');
-const fs = require('fs');
-
-const OfferLetter = require('../models/OfferLetter');
-const AppointmentLetter = require('../models/AppointmentLetter');
-const IncrementLetter = require('../models/IncrementLetter');
-const SalarySlip = require('../models/SalarySlip');
-const FNF = require('../models/FNF');
-const Termination = require('../models/TerminationLetter');
-
-const generateOfferPDF = require('../utils/pdfGenerator');
-const generateIncrementPDF = require('../utils/incrementPdfGenerator');
-const generateTerminationPDF = require('../utils/terminationPdfGenerator');
-const generateFNFPDF = require('../utils/generateFNFPDF');
-const { generateAppointmentPDFBuffer } = require('../utils/appointmentEmailService');
-const pdf = require('html-pdf');
-const ejs = require('ejs');
-
-const normalizeDocType = (value) =>
-  String(value || '').toLowerCase().replace(/[\s_-]+/g, '');
-
-const matchesDocType = (docType, filterType) =>
-  normalizeDocType(docType) === normalizeDocType(filterType);
-
-const renderSalarySlipPDF = async (doc) => {
-  const tpl = path.join(__dirname, '../templates/salarySlip.ejs');
-  const formatINR = (val) => Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const html = await ejs.renderFile(tpl, {
-    logo: getAssetBase64('blackLogo.png'),
-    hrSignature: getAssetBase64('hrSignature.png'),
-    companyName: 'VIRAL ADS MEDIA',
-    payMonth: doc.monthYear || '—',
-    netPayWords: doc.netPayWords || '',
-    employeeName: doc.employeeName || '—',
-    employeeId: doc.employeeId || '—',
-    designation: doc.designation || '—',
-    joiningDate: doc.joiningDate || '—',
-    panNumber: doc.panNumber || '—',
-    aadharNumber: doc.aadharNumber || '—',
-    bankAccount: doc.bankAccount || '—',
-    ifsc: doc.ifsc || '—',
-    phone: doc.phone || '—',
-    workingDays: doc.workingDays || 30,
-    lopDays: doc.lopDays || 0,
-    basicSalary: formatINR(doc.basicSalary),
-    allowance: formatINR(doc.allowance),
-    bonus: formatINR(doc.bonus),
-    lopAmount: formatINR(doc.lopAmount),
-    pfDeduction: formatINR(doc.pfDeduction),
-    otherDeduction: formatINR(doc.otherDeduction),
-    grossEarnings: formatINR(doc.grossEarnings),
-    totalDeductions: formatINR(doc.totalDeductions),
-    netPayable: formatINR(doc.netPayable),
-  });
-  return new Promise((resolve, reject) => {
-    pdf.create(html, { format: 'A4', border: { top: '8mm', right: '10mm', bottom: '8mm', left: '10mm' } }).toBuffer((err, b) => (err ? reject(err) : resolve(b)));
-  });
-};
-
-const getAssetBase64 = (filename) => {
-  const searchDirs = [
-    path.join(__dirname, '../assets', filename),
-    path.join(__dirname, '../public', filename),
-    path.join(process.cwd(), 'assets', filename),
-    path.join(__dirname, '../../frontend/public', filename),
-    path.join(__dirname, '../../HRMS-frontend-21Sept/public', filename),
-  ];
-  for (const d of searchDirs) {
-    if (fs.existsSync(d)) {
-      try {
-        const b = fs.readFileSync(d);
-        return `data:image/png;base64,${b.toString('base64')}`;
-      } catch (e) {}
-    }
-  }
-  return '';
-};
-
+const Delivery = require('../models/DocumentDelivery');
+const mongoose = require('mongoose');
+const {ensure,readPDF}=require('../utils/documentArchive');
+const isStaff = user => ['admin','hr'].includes(user.role);
+const scope = user => ({deletedAt: null, ...(isStaff(user) ? {} : {recipient:String(user.email || '').trim().toLowerCase(),status:'Sent'})});
 exports.getAllDocuments = async (req, res) => {
-  try {
-    const { type, search, email } = req.query;
-
-    const [offers, appointments, increments, salaries, fnfs, terminations] = await Promise.all([
-      OfferLetter.find().sort({ createdAt: -1 }).lean(),
-      AppointmentLetter.find().sort({ createdAt: -1 }).lean(),
-      IncrementLetter.find().sort({ createdAt: -1 }).lean(),
-      SalarySlip.find().sort({ createdAt: -1 }).lean(),
-      FNF.find().sort({ createdAt: -1 }).lean(),
-      Termination.find().sort({ createdAt: -1 }).lean(),
-    ]);
-
-    let docs = [];
-
-    offers.forEach(o => docs.push({
-      _id: o._id,
-      docType: 'Offer Letter',
-      refNo: o.offerId,
-      employeeName: o.employeeName,
-      email: o.emailId,
-      phone: o.phoneNumber,
-      position: o.position,
-      date: o.createdAt || o.joiningDate,
-      status: 'Issued'
-    }));
-
-    appointments.forEach(a => docs.push({
-      _id: a._id,
-      docType: 'Appointment Letter',
-      refNo: a.offerId,
-      employeeName: a.employeeName,
-      email: a.email,
-      phone: a.phone,
-      position: a.position,
-      date: a.createdAt || a.joiningDate,
-      status: 'Issued'
-    }));
-
-    increments.forEach(i => docs.push({
-      _id: i._id,
-      docType: 'Increment Letter',
-      refNo: i.incrementId,
-      employeeName: i.employeeName,
-      email: i.emailId,
-      phone: i.phoneNumber,
-      position: i.position,
-      date: i.createdAt || i.effectiveDate,
-      status: i.emailStatus || 'Issued'
-    }));
-
-    salaries.forEach(s => docs.push({
-      _id: s._id,
-      docType: 'Salary Slip',
-      refNo: s.monthYear,
-      employeeName: s.employeeName,
-      email: s.employeeEmail,
-      phone: s.phone,
-      position: s.designation,
-      date: s.createdAt,
-      status: s.emailStatus || 'Sent'
-    }));
-
-    fnfs.forEach(f => docs.push({
-      _id: f._id,
-      docType: 'FNF Settlement',
-      refNo: f.employeeId,
-      employeeName: f.employeeName,
-      email: f.email,
-      phone: f.phone,
-      position: f.designation,
-      date: f.createdAt,
-      status: 'Settled'
-    }));
-
-    terminations.forEach(t => docs.push({
-      _id: t._id,
-      docType: 'Termination Letter',
-      refNo: `TM-${t._id.toString().slice(-4).toUpperCase()}`,
-      employeeName: t.employeeName,
-      email: t.employeeEmail,
-      phone: t.employeePhone,
-      position: t.designation,
-      date: t.noticeDate || t.createdAt,
-      status: t.emailStatus || 'Issued'
-    }));
-
-    if (type && type !== 'ALL') {
-      docs = docs.filter((d) => matchesDocType(d.docType, type));
-    }
-
-    if (email) {
-      docs = docs.filter(d => d.email && d.email.toLowerCase() === email.toLowerCase());
-    }
-
-    if (search) {
-      const q = search.toLowerCase();
-      docs = docs.filter(d =>
-        (d.employeeName && d.employeeName.toLowerCase().includes(q)) ||
-        (d.email && d.email.toLowerCase().includes(q)) ||
-        (d.refNo && d.refNo.toLowerCase().includes(q))
-      );
-    }
-
-    docs.sort((a, b) => new Date(b.date) - new Date(a.date));
-    return res.status(200).json({ success: true, count: docs.length, data: docs });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+ const filter = scope(req.user);
+ if (isStaff(req.user) && req.query.email) filter.recipient=String(req.query.email).trim().toLowerCase();
+ if (isStaff(req.user) && req.query.status) filter.status=String(req.query.status);
+ if (req.query.from || req.query.to) {
+  filter.createdAt={};
+  for(const [key,operator] of [['from','$gte'],['to','$lt']]) if(req.query[key]) {
+   const date=new Date(String(req.query[key]));
+   if(!Number.isFinite(date.getTime())) return res.status(400).json({message:'Invalid date filter'});
+   if(key==='to')date.setUTCDate(date.getUTCDate()+1);
+   filter.createdAt[operator]=date;
   }
+ }
+ if (req.query.type && req.query.type !== 'ALL') filter.docType = String(req.query.type);
+ const docs = await Delivery.find(filter).select('-publicId -snapshotKey -__v').sort({createdAt:-1}).lean();
+ const search = String(req.query.search || '').toLowerCase();
+ const data = docs.filter(d => !search || [d.employeeName,d.refNo,d.recipient].some(v => String(v || '').toLowerCase().includes(search)))
+ .map(d => ({...d,email:d.recipient,date:d.sentAt || d.createdAt}));
+ res.set('Cache-Control','private, no-store').json({success:true,count:data.length,data});
+};
+exports.previewDocumentPDF = async (req,res) => {
+ if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({message:'Invalid document ID'});
+ const doc = await Delivery.findOne({...scope(req.user),_id:req.params.id,docType:req.params.type}).lean();
+ if (!doc) return res.status(404).json({message:'Document not found'});
+ const buffer = await readPDF(doc);
+ res.set({'Content-Type':'application/pdf','Cache-Control':'private, no-store','Content-Disposition':'inline; filename="document.pdf"'}).send(buffer);
+};
+exports.deleteDocument = async (req,res) => {
+ if (!isStaff(req.user)) return res.status(403).json({message:'HR access required'});
+ if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({message:'Invalid document ID'});
+ // Delivery rows can share one PDF asset. Remove only this vault entry.
+ const doc = await Delivery.findOneAndUpdate({_id:req.params.id,docType:req.params.type,deletedAt:null}, {$set:{deletedAt:new Date()}}, {new:true});
+ if (!doc) return res.status(404).json({message:'Document not found'});
+ return res.json({success:true,message:'Document removed from the vault'});
+};
+exports.bulkDownload = async (req,res) => {
+ const items = req.body.documents;
+ if (!Array.isArray(items) || !items.length || items.length > 25 || items.some(i=>!mongoose.isValidObjectId(i._id))) return res.status(400).json({message:'Select 1–25 valid documents'});
+ const docs = await Delivery.find({...scope(req.user),_id:{$in:items.map(i=>i._id)}}).lean();
+ if (docs.length !== new Set(items.map(i=>i._id)).size) return res.status(404).json({message:'Document not found'});
+ // Authorize and fetch everything before streaming; never silently omit failed files.
+ const buffers=[]; for (const doc of docs) buffers.push(await readPDF(doc));
+ const { ZipArchive } = await import('archiver');
+ const archive = new ZipArchive({zlib:{level:1}});
+ archive.on('error',err=>res.destroy(err));
+ res.on('close',()=>archive.abort());
+ res.set('Cache-Control','private, no-store').attachment('Documents.zip'); archive.pipe(res);
+ docs.forEach((doc,i)=>archive.append(buffers[i],{name:doc._id+'_'+String(doc.filename).replace(/[^a-zA-Z0-9_.-]/g,'_')}));
+ await archive.finalize();
+};
+exports.scope = scope;
+
+exports.getDocumentSource = async (req,res) => {
+ if (!isStaff(req.user)) return res.status(403).json({message:'HR access required'});
+ if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({message:'Invalid document ID'});
+ const doc = await Delivery.findOne({_id:req.params.id,docType:req.params.type,deletedAt:null}).lean();
+ if (!doc) return res.status(404).json({message:'Document not found'});
+ const models={'Onboarding Report':'Employee','Offer Letter':'OfferLetter','Appointment Letter':'AppointmentLetter','Increment Letter':'IncrementLetter','Salary Slip':'SalarySlip','Termination Letter':'TerminationLetter','FNF Settlement':'FNF'};
+ const model=models[doc.docType];
+ if (!model || !mongoose.isValidObjectId(doc.sourceId)) return res.status(404).json({message:'The source for this document is no longer available'});
+ const record = await require('../models/'+model).findById(doc.sourceId).lean();
+ if (!record || record.deletedAt) return res.status(404).json({message:'The source for this document is no longer available'});
+ res.set('Cache-Control','private, no-store').json({success:true,data:record});
 };
 
-exports.previewDocumentPDF = async (req, res) => {
-  try {
-    const { type, id } = req.params;
-    let pdfBuffer;
-    let filename = `Document_${id}.pdf`;
-    const cleanType = type.toLowerCase().replace(/\s+/g, '');
-
-    if (cleanType.includes('offer')) {
-      const doc = await OfferLetter.findById(id);
-      if (!doc) return res.status(404).send('Document not found');
-      pdfBuffer = await generateOfferPDF(doc);
-      filename = `Offer_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-    } else if (cleanType.includes('increment')) {
-      const doc = await IncrementLetter.findById(id);
-      if (!doc) return res.status(404).send('Document not found');
-      pdfBuffer = await generateIncrementPDF(doc);
-      filename = `Increment_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-    } else if (cleanType.includes('appointment')) {
-      const doc = await AppointmentLetter.findById(id);
-      if (!doc) return res.status(404).send('Document not found');
-      pdfBuffer = await generateAppointmentPDFBuffer(doc);
-      filename = `Appointment_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-    } else if (cleanType.includes('salary')) {
-      const doc = await SalarySlip.findById(id);
-      if (!doc) return res.status(404).send('Document not found');
-      pdfBuffer = await renderSalarySlipPDF(doc);
-      filename = `Payslip_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-    } else if (cleanType.includes('fnf')) {
-      const doc = await FNF.findById(id);
-      if (!doc) return res.status(404).send('Document not found');
-      pdfBuffer = await generateFNFPDF(doc);
-      filename = `FNF_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-    } else if (cleanType.includes('termination')) {
-      const doc = await Termination.findById(id);
-      if (!doc) return res.status(404).send('Document not found');
-      pdfBuffer = await generateTerminationPDF(doc);
-      filename = `Termination_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-    }
-
-    if (!pdfBuffer) return res.status(400).send('Invalid document type');
-
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="${filename}"`,
-      'Content-Length': pdfBuffer.length,
-    });
-    return res.end(pdfBuffer);
-  } catch (err) {
-    return res.status(500).send('Preview generation failed: ' + err.message);
-  }
-};
-
-exports.deleteDocument = async (req, res) => {
-  try {
-    const { type, id } = req.params;
-    const cleanType = type.toLowerCase().replace(/\s+/g, '');
-
-    let deleted = null;
-    if (cleanType.includes('offer')) deleted = await OfferLetter.findByIdAndDelete(id);
-    else if (cleanType.includes('appointment')) deleted = await AppointmentLetter.findByIdAndDelete(id);
-    else if (cleanType.includes('increment')) deleted = await IncrementLetter.findByIdAndDelete(id);
-    else if (cleanType.includes('salary')) deleted = await SalarySlip.findByIdAndDelete(id);
-    else if (cleanType.includes('fnf')) deleted = await FNF.findByIdAndDelete(id);
-    else if (cleanType.includes('termination')) deleted = await Termination.findByIdAndDelete(id);
-    else return res.status(400).json({ success: false, message: 'Invalid Type' });
-
-    if (!deleted) {
-      return res.status(404).json({ success: false, message: 'Document not found' });
-    }
-
-    return res.json({ success: true, message: 'Document removed from database' });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-exports.bulkDownload = async (req, res) => {
-  try {
-    const { documents } = req.body;
-    if (!documents || !Array.isArray(documents) || documents.length === 0) {
-      return res.status(400).json({ success: false, message: 'No documents selected' });
-    }
-
-    const archive = archiver('zip', { zlib: { level: 9 } });
-    res.attachment(`HRMS_Documents_${Date.now()}.zip`);
-    archive.pipe(res);
-
-    for (let i = 0; i < documents.length; i++) {
-      const item = documents[i];
-      try {
-        const cleanType = (item.docType || '').toLowerCase();
-        let buffer;
-        let fname = `doc_${i + 1}.pdf`;
-
-        if (cleanType.includes('offer')) {
-          const doc = await OfferLetter.findById(item._id);
-          if (doc) {
-            buffer = await generateOfferPDF(doc);
-            fname = `Offer_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-          }
-        } else if (cleanType.includes('appointment')) {
-          const doc = await AppointmentLetter.findById(item._id);
-          if (doc) {
-            buffer = await generateAppointmentPDFBuffer(doc);
-            fname = `Appointment_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-          }
-        } else if (cleanType.includes('increment')) {
-          const doc = await IncrementLetter.findById(item._id);
-          if (doc) {
-            buffer = await generateIncrementPDF(doc);
-            fname = `Increment_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-          }
-        } else if (cleanType.includes('salary')) {
-          const doc = await SalarySlip.findById(item._id);
-          if (doc) {
-            buffer = await renderSalarySlipPDF(doc);
-            fname = `Payslip_${doc.employeeName.replace(/\s+/g, '_')}_${doc.monthYear || ''}.pdf`;
-          }
-        } else if (cleanType.includes('fnf')) {
-          const doc = await FNF.findById(item._id);
-          if (doc) {
-            buffer = await generateFNFPDF(doc);
-            fname = `FNF_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-          }
-        } else if (cleanType.includes('termination')) {
-          const doc = await Termination.findById(item._id);
-          if (doc) {
-            buffer = await generateTerminationPDF(doc);
-            fname = `Termination_${doc.employeeName.replace(/\s+/g, '_')}.pdf`;
-          }
-        }
-
-        if (buffer) archive.append(buffer, { name: fname });
-      } catch (e) {}
-    }
-    await archive.finalize();
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
-  }
+exports.previewSource = async (req,res) => {
+ const models={'Onboarding Report':'Employee','Offer Letter':'OfferLetter','Appointment Letter':'AppointmentLetter','Increment Letter':'IncrementLetter','Salary Slip':'SalarySlip','Termination Letter':'TerminationLetter','FNF Settlement':'FNF'};
+ const model=models[req.params.type];
+ if(!model || !mongoose.isValidObjectId(req.params.id)) return res.status(400).json({message:'Invalid document'});
+ const record=await require('../models/'+model).findById(req.params.id);
+ if(!record || record.deletedAt) return res.status(404).json({message:'Document not found'});
+ const snapshot=await ensure(req.params.type,record);
+ res.set({'Content-Type':'application/pdf','X-Document-Id':String(snapshot._id),'Cache-Control':'private, no-store','Content-Disposition':'inline; filename="document.pdf"'}).send(await readPDF(snapshot));
 };

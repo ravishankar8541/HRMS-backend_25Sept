@@ -1,0 +1,11 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+body{font:14px 'Times New Roman',serif;color:#000;background:#fff;line-height:1.6}header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #000;padding-bottom:14px}header img{width:180px;height:auto}header div{text-align:right;font-size:11px}h1{text-align:center;font-size:22px;margin:24px 0}table{width:100%;border-collapse:collapse}td{padding:7px 0;vertical-align:top}.photo{width:100px;height:120px;object-fit:cover}.checklist{border:1px solid #aaa;padding:18px;margin-top:30px}.signatures{display:flex;justify-content:space-between;margin-top:50px}.footer{border-top:1px solid #aaa;margin-top:86px;text-align:center;font-size:11px}
+</style></head><body>
+<header><img src="<%= logo %>" alt="Viral Ads Media"><div><strong>VIRAL ADS MEDIA</strong><br>B-27, Budh Vihar Phase 1, New Delhi - 110086</div></header>
+<h1>ONBOARDING CONFIRMATION REPORT</h1>
+<table><tr><td><strong>Employee ID:</strong> <%= data.empId || '-' %><br><strong>Full Name:</strong> <%= data.name %><br><strong>Designation:</strong> <%= data.designation %><br><strong>Department:</strong> <%= data.department || '-' %><br><strong>Joining Date:</strong> <%= data.dateOfJoining ? new Date(data.dateOfJoining).toLocaleDateString('en-IN') : '-' %></td><td><strong>PAN:</strong> <%= data.panNumber || '-' %><br><strong>Aadhaar:</strong> <%= data.adharNumber || '-' %><br><strong>Bank Account:</strong> <%= data.accountNumber || '-' %><br><strong>IFSC:</strong> <%= data.ifscCode || '-' %></td><td><% if(photo){ %><img src="<%= photo %>" class="photo" alt="Employee"><% } %></td></tr></table>
+<div class="checklist"><h3>Document Verification Checklist</h3><p>Aadhaar Card: <%= data.adharCardDoc ? 'Collected' : 'Pending' %><br>PAN Card: <%= data.panCardDoc ? 'Collected' : 'Pending' %><br>Educational Certificates: <%= data.educationProof ? 'Collected' : 'Pending' %><br>Experience Letter: <%= data.experienceLetter ? 'Collected' : 'Pending' %><br>Background Verification: <%= data.bgVerification ? 'Complete' : 'Pending' %></p></div>
+<div class="signatures"><div>Prepared By<br><br>__________________________<br><strong>HR Department</strong><br>Viral Ads Media</div>
+</div>
+<div class="footer">Viral Ads Media | Digital Creative Agency<br>B-27, Budh Vihar Phase 1, New Delhi - 110086</div>
+</body></html>

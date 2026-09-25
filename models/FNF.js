@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const fnfSchema = new mongoose.Schema({
+  deletedAt: { type: Date, default: null },
   employeeId: { type: String, required: true, trim: true },
   employeeName: { type: String, required: true, trim: true },
   email: { type: String, required: true, trim: true, lowercase: true },
@@ -18,10 +19,13 @@ const fnfSchema = new mongoose.Schema({
   noticeRecovery: { type: Number, default: 0 },
   deductions: { type: Number, default: 0 },
   totalPayable: { type: Number, required: true },
-  laptopReturned: { type: Boolean, default: true },
-  idCardReturned: { type: Boolean, default: true },
-  clearanceApproved: { type: Boolean, default: true },
-  status: { type: String, enum: ['Draft', 'Approved', 'Disbursed', 'Settled'], default: 'Settled' },
+  laptopReturned: { type: Boolean, default: false },
+  idCardReturned: { type: Boolean, default: false },
+  clearanceApproved: { type: Boolean, default: false },
+  status: { type: String, enum: ['Draft', 'Approved', 'Disbursed', 'Settled'], default: 'Draft' },
+  paymentReference: String,
+  paidAt: Date,
+  approvedBy: String,
   remarks: { type: String, default: '' }
 }, { timestamps: true });
 

@@ -1,3 +1,5 @@
+const archive = require('../utils/documentArchive');
+const errorStatus = require('../utils/errorStatus');
 // Renamed the variable to match the actual service being used
 const sendAppointmentLetter = require('../utils/appointmentEmailService');
 const AppointmentLetter = require('../models/AppointmentLetter');
@@ -24,14 +26,16 @@ const createAppointment = async (req, res) => {
         });
         
 
+    const snapshot = await archive.ensure('Appointment Letter', appointment);
+
         res.status(201).json({
             success: true,
             message: "Appointment details saved",
             id: appointment._id,
-            data: appointment
+            documentId: snapshot._id, data: appointment
         });
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        res.status(errorStatus(err)).json({ success: false, message: err.message });
     }
 };
 
@@ -49,14 +53,14 @@ const sendEmail = async (req, res) => {
         
 
         // Using the renamed function here
-        await sendAppointmentLetter(email, appointment);
+        await sendAppointmentLetter(email || appointment.email, await archive.emailData('Appointment Letter', appointment));
 
         res.json({
             success: true,
             message: `Appointment letter sent successfully to ${email}`
         });
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        res.status(errorStatus(err)).json({ success: false, message: err.message });
     }
 };
 

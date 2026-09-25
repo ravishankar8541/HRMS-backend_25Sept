@@ -1,3 +1,5 @@
+const archive = require('../utils/documentArchive');
+const errorStatus = require('../utils/errorStatus');
 const Termination = require('../models/TerminationLetter');
 const sendTerminationLetter = require('../utils/terminationEmailService'); // or '../utils/sendTerminationLetter' depending on your filename
 
@@ -42,15 +44,17 @@ const createTermination = async (req, res) => {
       noticeDate: new Date(),
     });
 
+    const snapshot = await archive.ensure('Termination Letter', terminationRecord);
+
     return res.status(201).json({
       success: true,
       message: 'Termination record created successfully',
       refId,
-      data: terminationRecord,
+      documentId: snapshot._id, data: terminationRecord,
     });
   } catch (err) {
     console.error('Create termination error:', err);
-    return res.status(500).json({
+    return res.status(errorStatus(err)).json({
       success: false,
       message: 'Failed to create termination record',
       error: err.message,
@@ -101,7 +105,7 @@ const sendEmail = async (req, res) => {
     };
 
     // Send the email (with PDF if generation succeeds)
-    await sendTerminationLetter(recipientEmail, emailData);
+    await sendTerminationLetter(recipientEmail, await archive.emailData('Termination Letter', terminationRecord));
 
     // Update status only after successful send
     terminationRecord.emailStatus = 'Sent';
@@ -115,7 +119,7 @@ const sendEmail = async (req, res) => {
   } catch (err) {
     console.error('Send termination email error:', err);
 
-    return res.status(500).json({
+    return res.status(errorStatus(err)).json({
       success: false,
       message: 'Failed to send termination email',
       error: err.message,

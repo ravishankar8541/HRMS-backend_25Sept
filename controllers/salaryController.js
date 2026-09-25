@@ -1,3 +1,5 @@
+const archive = require('../utils/documentArchive');
+const errorStatus = require('../utils/errorStatus');
 const Salary = require('../models/SalarySlip');
 const sendSalarySlipEmail = require('../utils/sendSalarySlip');
 const { toWords } = require("number-to-words");
@@ -32,6 +34,8 @@ const createSalarySlip = async (req, res) => {
       });
     }
 
+    const numeric = [basic, allowance, bonus, pf, totalLeaveDays, otherDeduction];
+    if (numeric.some(v => !Number.isFinite(Number(v)) || Number(v) < 0) || (nod !== undefined && (!Number.isInteger(Number(nod)) || Number(nod) < 1 || Number(nod) > 31)) || Number(totalLeaveDays) > Number(nod || 30)) return res.status(400).json({message:'Invalid salary amounts or working/leave days'});
     const basicAmount = Number(basic || 0);
     const allowanceAmount = Number(allowance || 0);
     const bonusAmount = Number(bonus || 0);
@@ -76,14 +80,16 @@ const createSalarySlip = async (req, res) => {
       emailStatus: 'Pending',
     });
 
+    const snapshot = await archive.ensure('Salary Slip', salaryRecord);
+
     return res.status(201).json({
       success: true,
       message: 'Salary slip generated and saved successfully',
-      data: salaryRecord,
+      documentId: snapshot._id, data: salaryRecord,
     });
   } catch (err) {
     console.error('DATABASE SAVE ERROR:', err);
-    return res.status(500).json({
+    return res.status(errorStatus(err)).json({
       success: false,
       message: 'Failed to generate salary slip record',
       error: err.message,
@@ -138,7 +144,7 @@ const sendSalaryEmail = async (req, res) => {
       netPayWords: netPayWords,
     };
 
-    await sendSalarySlipEmail(salaryRecord.employeeEmail, emailData);
+    await sendSalarySlipEmail(salaryRecord.employeeEmail, await archive.emailData('Salary Slip', salaryRecord));
 
     salaryRecord.emailStatus = 'Sent';
     await salaryRecord.save();
@@ -146,7 +152,7 @@ const sendSalaryEmail = async (req, res) => {
     return res.json({ success: true, message: "Email sent successfully" });
   } catch (err) {
     console.error('Send salary email error:', err);
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(errorStatus(err)).json({ success: false, error: err.message });
   }
 };
 

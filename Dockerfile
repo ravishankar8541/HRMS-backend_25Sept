@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:24-bookworm-slim
 
 # Puppeteer dependencies
 RUN apt-get update && apt-get install -y \
@@ -21,9 +21,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # Skip puppeteer chromium download
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_NO_SANDBOX=true
 
-RUN npm install
+RUN npm ci --omit=dev
 
 COPY . .
 

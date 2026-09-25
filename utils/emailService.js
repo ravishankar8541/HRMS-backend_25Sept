@@ -1,25 +1,12 @@
-const nodemailer = require('nodemailer');
+const deliverDocument = require('./deliverDocument');
 
-/*const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});  */
 
-const transporter = nodemailer.createTransport({
-   host: "smtp.titan.email",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+
+
  
 const sendOfferLetter = async (to, offer) => {
-  const pdfBuffer = await require('./pdfGenerator')(offer);
+  const transporter = { sendMail: options => deliverDocument(options, 'Offer Letter', offer.employeeName, offer._snapshotId) };
+  const pdfBuffer = offer._pdfBuffer || await require('./pdfGenerator')(offer);
 
   // Professional Email Template
   const emailHtml = `

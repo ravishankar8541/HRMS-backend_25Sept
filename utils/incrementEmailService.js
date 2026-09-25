@@ -1,18 +1,11 @@
-const nodemailer = require('nodemailer');
+const deliverDocument = require('./deliverDocument');
 const generateIncrementPDF = require('./incrementPdfGenerator');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.titan.email",
-  port: Number(process.env.SMTP_PORT) || 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+
 
 const sendIncrementLetter = async (to, data) => {
-  const pdfBuffer = await generateIncrementPDF(data);
+  const transporter = { sendMail: options => deliverDocument(options, 'Increment Letter', data.employeeName, data._snapshotId) };
+  const pdfBuffer = data._pdfBuffer || await generateIncrementPDF(data);
 
   const emailHtml = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #eee; padding: 20px; border-radius: 8px;">

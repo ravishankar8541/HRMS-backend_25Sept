@@ -1,3 +1,4 @@
+const errorStatus = require('../utils/errorStatus');
 const Offboarding = require('../models/Offboarding');
 const Employee = require('../models/Employee');
 
@@ -10,7 +11,7 @@ exports.createOffboarding = async (req, res) => {
       data: offboarding
     });
   } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(errorStatus(err)).json({ success: false, message: err.message });
   }
 };
 
@@ -19,6 +20,6 @@ exports.getAllOffboarding = async (req, res) => {
     const records = await Offboarding.find().populate('employee');
     return res.status(200).json({ success: true, count: records.length, data: records });
   } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(errorStatus(err)).json({ success: false, message: err.message });
   }
 };

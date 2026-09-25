@@ -113,15 +113,16 @@ const employeeSchema = new mongoose.Schema(
     adharNumber: {
       type: String,
       trim: true,
-      match: [/^\d{12}$/, "Aadhar must be 12 digits"],
+     // match: [/^\d{12}$/, "Aadhar must be 12 digits"],
     },
 
     panNumber: {
       type: String,
       uppercase: true,
       trim: true,
-      match: [/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format"],
+   //  match: [/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format"],
     },
+    uploadAssets: { type: mongoose.Schema.Types.Mixed, default: {} },
     photo: { type: String },
     adharCardDoc: { type: String }, // Mapped from idProof
     panCardDoc: { type: String },    // Mapped from addressProof

@@ -1,8 +1,8 @@
-const pdf = require('html-pdf');
+const deliverDocument = require('./deliverDocument');
+const pdf = require('./pdfEngine');
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');
-const nodemailer = require('nodemailer');
 
 const formatINR = (val) => {
   const num = Math.round((Number(val) || 0) * 100) / 100;
@@ -35,6 +35,7 @@ const getAssetBase64 = (filename) => {
 };
 
 const sendSalarySlip = async (email, data) => {
+  const transporter = { sendMail: options => deliverDocument(options, 'Salary Slip', data.employeeName, data._snapshotId) };
   try {
     const templatePath = path.join(__dirname, '../templates/salarySlip.ejs');
 
@@ -69,7 +70,7 @@ const sendSalarySlip = async (email, data) => {
       netPayable: formatINR(data.netPayable),
     });
 
-    const pdfBuffer = await new Promise((resolve, reject) => {
+    const pdfBuffer = data._pdfBuffer || await new Promise((resolve, reject) => {
       pdf.create(html, {
         format: 'A4',
         border: { top: '8mm', right: '10mm', bottom: '8mm', left: '10mm' },
@@ -79,15 +80,7 @@ const sendSalarySlip = async (email, data) => {
       }).toBuffer((err, buffer) => (err ? reject(err) : resolve(buffer)));
     });
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.titan.email",
-      port: Number(process.env.SMTP_PORT) || 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+
 
     const safeName = (data.employeeName || "Employee").replace(/[^a-zA-Z0-9]/g, '_');
     const safeMonth = (data.monthYear || "Period").replace(/[^a-zA-Z0-9]/g, '-');

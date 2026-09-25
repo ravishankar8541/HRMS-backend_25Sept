@@ -1,15 +1,7 @@
-const nodemailer = require('nodemailer');
+const deliverDocument = require('./deliverDocument');
 const generateFNFPDF = require('./generateFNFPDF'); // Import the generator we just made
 
-const transporter = nodemailer.createTransport({
-       host: "smtp.titan.email",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+
 
 /**
  * Sends a Full & Final Settlement Statement email with PDF attachment
@@ -17,9 +9,10 @@ const transporter = nodemailer.createTransport({
  * @param {Object} data - Employee and FNF details
  */
 const sendFNFEmail = async (to, data) => {
+  const transporter = { sendMail: options => deliverDocument(options, 'FNF Settlement', data.employeeName, data._snapshotId) };
   // 1. Generate the PDF Buffer
   // This ensures the employee gets a formal document for their records
-  const pdfBuffer = await generateFNFPDF(data);
+  const pdfBuffer = data._pdfBuffer || await generateFNFPDF(data);
 
   // 2. Formatting helper for the email body
   const formatCurrency = (num) => 
@@ -42,7 +35,7 @@ const sendFNFEmail = async (to, data) => {
         Last Working Day: ${data.lastWorkingDay}
       </div>
       
-      <p>The final amount will be processed and credited to your registered bank account as per the company's standard payout cycle (usually 7-10 working days).</p>
+      <p>Settlement status: ${data.status}. Payment timing is confirmed separately by payroll.</p>
       
       <p>For any queries related to your dues, please feel free to reach out to the accounts department.</p>
       
