@@ -14,9 +14,19 @@ exports.register = async (req, res) => {
       });
     }
 
-    if (role === 'admin' && req.user.role !== 'admin') return res.status(403).json({message:'Only administrators can create administrators'});
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || username)) return res.status(400).json({message:'Registered email is required'});
-    const existingUser = await User.findOne({ username: String(username).trim().toLowerCase() });
+    if (role === 'admin' && req.user && req.user.role !== 'admin') {
+      return res.status(403).json({
+        message: 'Only administrators can create administrators',
+      });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || username)) {
+      return res.status(400).json({ message: 'Registered email is required' });
+    }
+
+    const existingUser = await User.findOne({
+      username: String(username).trim().toLowerCase(),
+    });
 
     if (existingUser) {
       return res.status(400).json({
@@ -26,9 +36,13 @@ exports.register = async (req, res) => {
     }
 
     const user = await User.create({
-      name,                 // ✅ ADD THIS
+      name,
       username: String(username).trim().toLowerCase(),
-      email: String(email || (String(username).includes("@") ? username : "")).trim().toLowerCase(),
+      email: String(
+        email || (String(username).includes('@') ? username : '')
+      )
+        .trim()
+        .toLowerCase(),
       password,
       role: role || 'employee',
     });
@@ -44,7 +58,6 @@ exports.register = async (req, res) => {
         role: user.role,
       },
     });
-
   } catch (error) {
     console.error('Registration error:', error);
     return res.status(errorStatus(error)).json({
@@ -67,7 +80,9 @@ exports.login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ username: String(username).trim().toLowerCase() }).select('+password');
+    const user = await User.findOne({
+      username: String(username).trim().toLowerCase(),
+    }).select('+password');
 
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({
