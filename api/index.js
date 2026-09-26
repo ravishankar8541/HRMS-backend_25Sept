@@ -19,19 +19,15 @@ const documentRoutes = require('../routes/documentRoutes');
 
 const PORT = process.env.PORT || 5000;
 
-// Connect Database
-
-
 // CORS Middleware
 app.use(cors({
   exposedHeaders: ['X-Document-Id'],
   origin: (origin, callback) => {
     const allowed = [
-      'https://hrms.viraladsmedia.com', 
+      'https://hrms.viraladsmedia.com',
       'http://hrms.viraladsmedia.com',
       ...(process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map(v => v.trim())
     ];
-    // Allow requests with no origin (Postman, mobile apps, etc.)
     callback(null, !origin || allowed.includes(origin));
   }
 }));
@@ -87,9 +83,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET is required');
+}
+
+const start = dbConnection();
+
 if (require.main === module) {
-  if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is required');
-  dbConnection().then(() => app.listen(PORT, () => console.log(`Server listening on ${PORT}`)));
+  start.then(() => app.listen(PORT, () => console.log(`Server listening on ${PORT}`)));
 }
 
 module.exports = app;
